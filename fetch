@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require 'net/http'
+require 'json'
+
+users = ARGV
+
+if users.nil? || users.empty?
+  print "\033[0;31mPlease give at least one username:\n\n"
+  print "e.g. fetch sjmog neoeno\033[0m\n"
+  exit 0
+end
+
+repo_count = 0
+
+users.each do |user|
+  print "Fetching repos for #{user}...\n"
+
+  url = "https://api.github.com/users/#{user}/repos"
+  uri = URI(url)
+  response = Net::HTTP.get(uri)
+  repos = JSON.parse(response)
+
+  if repos.nil? || repos.empty?
+    print "\033[0;31mUser #{ user } has no repos. Check you spelled their username correctly.\033[0m\n"
+  end
+
+  `mkdir #{user}`
+  
+  repos.each_with_index do |repo, index|
+    print "Fetching repo #{ index + 1 }/#{ repos.count } for user #{ user }\n"
+	    `curl #{ repo["url"] }/zipball/master --output ./#{user}/#{repo["name"]}.zip --silent`
+    repo_count += 1
+  end
+end
+
+print "Fetched #{repo_count} repos across #{users.count} users\n"
