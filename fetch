@@ -23,13 +23,19 @@ users.each do |user|
 
   if repos.nil? || repos.empty?
     print "\033[0;31mUser #{ user } has no repos. Check you spelled their username correctly.\033[0m\n"
+    next
+  end
+
+  if (repos.first["message"] && repos.first["message"] == "Not Found")
+    print "\033[0;31mUser #{ user } does not exist. Check you spelled their username correctly.\033[0m\n"
+    next
   end
 
   `mkdir #{user}`
   
   repos.each_with_index do |repo, index|
     print "Fetching repo #{ index + 1 }/#{ repos.count } for user #{ user }\n"
-	    `curl #{ repo["url"] }/zipball/master --output ./#{user}/#{repo["name"]}.zip --silent`
+	 `curl -J -L --silent --output ./#{user}/#{repo["name"]}.zip #{ repo["url"] }/zipball/master`
     repo_count += 1
   end
 end
